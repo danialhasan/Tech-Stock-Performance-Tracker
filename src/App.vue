@@ -1,26 +1,37 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <SearchBar />
+  <Graph />
+  <StockList />
+  <Navbar />
+
+  <!-- TODO: List component. -->
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import SearchBar from "./components/SearchBar";
+import Graph from "./components/Graph";
+import Navbar from "./components/Navbar";
+import StockList from "./components/StockList";
 
 export default {
-  name: 'App',
-  components: {
-    HelloWorld
-  }
-}
+  name: "App",
+  components: { SearchBar, Graph, Navbar, StockList },
+  data() {
+    return {
+      stocks: [],
+    };
+  },
+  beforeMount() {
+    /**
+     * Before mounting, get the info for all stocks in this.stocks
+     * from the API.
+     */
+  },
+  methods: {
+    getInfo(stock) {
+      console.log(stock);
+      return;
+    },
+  },
+};
 </script>
-
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-</style>
