@@ -23,7 +23,7 @@
     </div> -->
     <form class="w-full h-full">
       <div class="relative flex items-center w-full h-full">
-        <div class="absolute mx-2 h-8 w-8">
+        <div id="search_icon" class="absolute mx-2 h-8 w-8" @click="gatherStockInput">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-6 w-6"
@@ -55,6 +55,11 @@ export default {
   name: "SearchBar",
   data() {
     return {};
+  },
+  methods:{
+    gatherStockInput(){
+      
+    }
   },
 };
 </script>
