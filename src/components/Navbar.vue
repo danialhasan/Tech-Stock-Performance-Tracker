@@ -1,10 +1,10 @@
 <template>
   <div
     id="container"
-    class="absolute flex items-center justify-center bottom-0 w-full px-4 h-28"
+    class="fixed flex items-center justify-center bottom-0 w-full px-4 h-28"
   >
     <div
-      class="sticky flex flex-row justify-center items-center w-full bg-gray-800 h-20 rounded-lg"
+      class="flex flex-row justify-center items-center w-full bg-gray-800 h-20 rounded-lg"
     >
       <div
         class="relative flex flex-col justify-center items-center w-20 h-20 mx-6"
