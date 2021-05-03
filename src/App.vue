@@ -31,13 +31,7 @@ export default {
   },
   methods: {
     removeStock(symbol) {
-      console.log(`Stock to remove: ${symbol}`);
-      /**
-       * Find the stock in this.stocks that has the key of symbol.
-       * Delete that key value pair.
-       */
       delete this.stocks[symbol];
-      console.log(this.stocks);
     },
     async getInfoAPI(stock) {
       const endpoint = "http://api.marketstack.com/v1/eod";
