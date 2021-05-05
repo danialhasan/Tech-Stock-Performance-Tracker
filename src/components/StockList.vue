@@ -1,6 +1,6 @@
 <template>
   <!-- TODO: Display passed down data from props.  -->
-  <div class="mt-12 mb-36 flex items-start px-2 outline-black">
+  <div class="mt-12 mb-36 flex items-start px-2">
     <div class="overflow-x-auto w-full">
       <table
         class="mx-auto max-w-4xl w-full whitespace-nowrap rounded-lg bg-white divide-y divide-gray-300 overflow-hidden"
