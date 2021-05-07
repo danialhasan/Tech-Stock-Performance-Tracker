@@ -82,7 +82,7 @@ export default {
     };
   },
   mounted() {
-    console.log(this.stocks);
+    // console.log(this.stocks);
   },
   methods: {
     removeStock(symbol) {

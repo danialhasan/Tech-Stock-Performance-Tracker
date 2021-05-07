@@ -1,12 +1,17 @@
 <template>
-  <canvas class="mx-auto w-full h-96 border-2 border-black bg-gray-600">
-  </canvas>
+  <canvas id="stock_graph" class=""> </canvas>
 </template>
 <script>
+import { Line } from "vue-chartjs";
+
 export default {
   name: "Graph",
   data() {
     return {};
+  },
+  mounted() {
+    const ctx = document.getElementById("stock_graph");
+    new Line(ctx, this.planetChartData);
   },
 };
 </script>

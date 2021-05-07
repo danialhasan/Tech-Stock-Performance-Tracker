@@ -1,88 +1,133 @@
 <template>
-  <SearchBar />
-  <Graph />
+  <SearchBar @stock_submission="this.getInfoAPI" />
+  <!-- <Graph /> -->
   <StockList :Stocks="this.stocks" @remove-stock="removeStock" />
-
+  <line-chart :graphData="this.testData" />
   <Navbar />
 </template>
 
 <script>
 import SearchBar from "./components/SearchBar";
-import Graph from "./components/Graph";
 import Navbar from "./components/Navbar";
 import StockList from "./components/StockList";
+import LineChart from "./components/LineChart";
 import axios from "axios";
+// import LineChart from "./modules/LineChart.vue";
 
 export default {
   name: "App",
-  components: { SearchBar, Graph, Navbar, StockList },
+  components: { SearchBar, Navbar, StockList, LineChart },
   data() {
     return {
       stocks: {},
-      stockNameInfo: [
+      stockList: ["AAPL", "FB"],
+      // "AAPL", "FB", "GNL", "TSLA"
+      testData: [
         {
-          //quotes are inconsistent but it makes no functional difference. Reason? ESlint.
-          Symbol: "A",
-          Name: "Agilent Technologies Inc. Common Stock",
-          "Last Sale": "$133.64",
-          "Net Change": -0.51,
-          "% Change": "-0.38%",
-          "Market Cap": "40719775905.00",
-          Country: "United States",
-          "IPO Year": 1999,
-          Volume: 1514161,
-          Sector: "Capital Goods",
-          Industry: "Electrical Products",
-        },
-        {
-          Symbol: "AA",
-          Name: "Alcoa Corporation Common Stock ",
-          "Last Sale": "$36.64",
-          "Net Change": -0.53,
-          "% Change": "-1.426%",
-          "Market Cap": "6830027702.00",
-          Country: "",
-          "IPO Year": 2016,
-          Volume: 6280970,
-          Sector: "Basic Industries",
-          Industry: "Metal Fabrications",
-        },
-        {
-          Symbol: "AAC",
-          Name: "Ares Acquisition Corporation Class A Ordinary Shares",
-          "Last Sale": "$9.83",
-          "Net Change": 0.01,
-          "% Change": "0.102%",
-          "Market Cap": "1228872875.00",
-          Country: "",
-          "IPO Year": 2021,
-          Volume: 901485,
-          Sector: "Finance",
-          Industry: "Business Services",
+          name: "series-1",
+          data: [30, 40, 35, 50, 49, 60, 70, 91],
         },
       ],
+      datasets: [],
+      apiCalled: false,
     };
   },
-  beforeMount() {
+  created() {
+    //lifecycle hooks are always synchronous, never async.
     //Get some data to populate our data stores
-    let stock = ["AAPL", "FB", "GNL", "TSLA", "NFLX"];
+    // let stock = ["AAPL", "FB", "GNL", "TSLA"];
+    let stock = this.stockList;
+    let dataRecieved = false;
+    // comment this out to avoid being rate limited
+    stock.forEach((stockTicker, i) => {
+      this.getInfoAPI(stockTicker);
+      // var tradingDays = this.stocks[stockTicker].lastWeekTradingDays;
 
-    //comment this out to avoid being rate limited
-    // stock.forEach((stockTicker) => {
-    //   this.getInfoAPI(stockTicker);
-    // });
-    this.trimDatabase();
+      //tradingDays is equal to an empty object because it's accessed before this.getInfoAPI finishes the
+      //api request, that would fill up the variable with data. So, we need to form the datasets array
+      //after the API request is fulfilled.
+
+      // console.log(tradingDays);
+      // console.log(i);
+      //
+      // if (i == stock.length - 1) {
+      //   dataRecieved = true;
+      // }
+      this.apiCalled = true;
+    });
+    // console.log(dataRecieved);
+    // if (dataRecieved) {
+    //   this.createDatasets(stock);
+    //   console.log("All Stock API data recieved! Stock data:");
+    //   console.log(Object.values(this.stocks["AAPL"]));
+    // }
+    /**
+     * Create datasets array. This array houses dataset arrays, each of which represents the
+     * dataset used to graph the price fluctuations of each stock. Since it's an array of arrays,
+     * you can't access the dataset arrays of specific companies without knowing their indice value
+     * in the 'stock' array of stock tickers.
+     *
+     * DATA STRUCTURE
+     * datasets = [ // for 3 stocks
+     *  [  //"this.stocks[STOCK].lastWeekTradingDays", for AAPL...
+     *   "this.stocks[stock].lastWeekTradingDays.0.close"
+     *   "this.stocks[stock].lastWeekTradingDays.1.close"
+     *   "this.stocks[stock].lastWeekTradingDays.2.close"
+     *   "this.stocks[stock].lastWeekTradingDays.3.close"
+     *   "this.stocks[stock].lastWeekTradingDays.4.close"
+     *   "this.stocks[stock].lastWeekTradingDays.5.close"
+     *   "this.stocks[stock].lastWeekTradingDays.6.close"
+     * ],
+     *  [...], //for TSLA...
+     *  [...], //for GNL...
+     * ]
+     */
+  },
+  mounted() {
+    // this.createDatasets(this.stockList);
   },
   methods: {
+    createDatasets(stock) {
+      /*
+      For each stock in the list of stocks, create one array.
+      For each indice in the stock's lastWeekTradingDays array, 
+      push the close key.
+      */
+      stock.forEach((stockTicker, i) => {
+        let priceArray = [];
+        // placed in the loop so it resets every time the loop goes to another stock.
+        // This is done so that a new priceArray of fresh values is pushed to the dataset.
+
+        // this.stocks[stockTicker].lastWeekTradingDays is of type OBJECT, not array.
+        for (var day in this.stocks[stockTicker].lastWeekTradingDays) {
+          priceArray.push(
+            this.stocks[stockTicker].lastWeekTradingDays[day].close
+          );
+          //accessing the price data of the stock for each day of last week
+        }
+        this.datasets.push(priceArray);
+      });
+      console.log(this.datasets);
+      /*
+      The first time this.datasets is logged, it carries the data of the first stock and not
+      the second stock because the api call for the first one has been completed, whereas the api
+      call for the second one has not.
+
+      There are two ways to fix this:
+      1. Find some way to call this.createDatasets once, after all the API calls have been made.
+      2. Let this.createDatasets be called multiple times in between API calls with incomplete data. 
+         Then, parse it for discrepencies (where an array index is null or two are duplicates) and 
+         deal with it promptly.
+
+      In the end, we're passing the dataset to the lineChart component through props. We do not want to 
+      chart malformed data.
+      
+      */
+    },
     removeStock(symbol) {
       delete this.stocks[symbol];
     },
     trimDatabase() {
-      /**
-       * Iterate through array.
-       * For each index, iterate through object keys.
-       * If key does not match "name" or "symbol", delete key.
-       */
       for (var i = 0; i < this.stockNameInfo.length; i++) {
         for (let key in this.stockNameInfo[i]) {
           if (key != "Name" && key != "Symbol") {
@@ -90,16 +135,16 @@ export default {
           }
         }
       }
-      console.log(this.stockNameInfo);
     },
     async getInfoAPI(stock) {
-      // Recently I've been running low on requests since I'm only allowed 1000.
-      // It is too small. I will make several accounts, since I have around 6 emails.
-      // Excluding this account, I will have 5000 requests to use every month if I recycle
-      // the API keys.
+      /**
+       * TODO
+       * Add validation. If stock API call fails, don't add it to the stock list
+       */
+
       const endpoint = "http://api.marketstack.com/v1/eod";
-      const apiKey = "71aea0f9ae7c2fcb0d5ddff108131d24"; // for email 1
-      // const apiKey = "4001098532f1de7d5e26baff968871d7"; // for email 2
+      // const apiKey = "71aea0f9ae7c2fcb0d5ddff108131d24"; // for email 1, rate limit reached for month of May
+      const apiKey = "4001098532f1de7d5e26baff968871d7"; // for email 2
 
       // If stock is not found in stocks object, add it.
       if (!(stock in this.stocks)) {
@@ -132,6 +177,14 @@ export default {
           stockInfo.today = latestTradingDay;
           stockInfo.lastThreeTradingDays = lastThreeTradingDays;
           stockInfo.lastWeekTradingDays = lastWeekTradingDays;
+
+          /**To avoid the problem of not being able to await this function in
+           * a lifecycle hook for some reason, I'll try to form the datasets here.
+           */
+          // MAKE SURE THIS EXECUTES LAST, AFTER ALL THE PREVIOUS ASYNC CODE.
+          // Note, since this is in the async api function, it'll get called however many stocks there are.
+          // For example, if there are 4 stocks in stockList, it'll get called 4 times. This might make duplicates.
+          this.createDatasets(this.stockList);
         })
         .catch((err) => {
           console.log(err);
@@ -140,9 +193,7 @@ export default {
               "Inputted ticker does not exist. Input a real ticker and try again."
             );
           }
-          // delete stock from stocks data object, because
-          // a failed get request means the stock inputted is not a real stock.
-          // we only want real stock tickers in our this.stocks data object.
+
           delete this.stocks.stock;
         });
     },
