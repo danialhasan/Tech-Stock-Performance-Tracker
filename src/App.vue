@@ -20,7 +20,7 @@ export default {
   data() {
     return {
       stocks: {},
-      stockList: ["AAPL", "FB"],
+      stockList: ["AAPL", "FB", "GNL"],
       // "AAPL", "FB", "GNL", "TSLA"
       testData: [
         {
@@ -29,7 +29,6 @@ export default {
         },
       ],
       datasets: [],
-      apiCalled: false,
     };
   },
   created() {
@@ -37,23 +36,8 @@ export default {
     //Get some data to populate our data stores
     // let stock = ["AAPL", "FB", "GNL", "TSLA"];
     let stock = this.stockList;
-    let dataRecieved = false;
-    // comment this out to avoid being rate limited
     stock.forEach((stockTicker, i) => {
       this.getInfoAPI(stockTicker);
-      // var tradingDays = this.stocks[stockTicker].lastWeekTradingDays;
-
-      //tradingDays is equal to an empty object because it's accessed before this.getInfoAPI finishes the
-      //api request, that would fill up the variable with data. So, we need to form the datasets array
-      //after the API request is fulfilled.
-
-      // console.log(tradingDays);
-      // console.log(i);
-      //
-      // if (i == stock.length - 1) {
-      //   dataRecieved = true;
-      // }
-      this.apiCalled = true;
     });
     // console.log(dataRecieved);
     // if (dataRecieved) {
@@ -88,41 +72,16 @@ export default {
   },
   methods: {
     createDatasets(stock) {
-      /*
-      For each stock in the list of stocks, create one array.
-      For each indice in the stock's lastWeekTradingDays array, 
-      push the close key.
-      */
-      stock.forEach((stockTicker, i) => {
-        let priceArray = [];
-        // placed in the loop so it resets every time the loop goes to another stock.
-        // This is done so that a new priceArray of fresh values is pushed to the dataset.
-
-        // this.stocks[stockTicker].lastWeekTradingDays is of type OBJECT, not array.
-        for (var day in this.stocks[stockTicker].lastWeekTradingDays) {
-          priceArray.push(
-            this.stocks[stockTicker].lastWeekTradingDays[day].close
-          );
-          //accessing the price data of the stock for each day of last week
-        }
-        this.datasets.push(priceArray);
-      });
-      console.log(this.datasets);
-      /*
-      The first time this.datasets is logged, it carries the data of the first stock and not
-      the second stock because the api call for the first one has been completed, whereas the api
-      call for the second one has not.
-
-      There are two ways to fix this:
-      1. Find some way to call this.createDatasets once, after all the API calls have been made.
-      2. Let this.createDatasets be called multiple times in between API calls with incomplete data. 
-         Then, parse it for discrepencies (where an array index is null or two are duplicates) and 
-         deal with it promptly.
-
-      In the end, we're passing the dataset to the lineChart component through props. We do not want to 
-      chart malformed data.
-      
-      */
+      //individual stock ticker
+      let priceArray = [];
+      for (var day in this.stocks[stock].lastWeekTradingDays) {
+        priceArray.push(this.stocks[stock].lastWeekTradingDays[day].close);
+        //accessing the price data of the stock for each day of last week
+      }
+      this.datasets.push(priceArray);
+      //Sometimes this.datasets is reverse in relation to this.stocks. It only happens sometimes
+      //I'm not sure if it's even happening in the first place, since vue devtools is not stable with
+      //Vue 3.
     },
     removeStock(symbol) {
       delete this.stocks[symbol];
@@ -137,6 +96,7 @@ export default {
       }
     },
     async getInfoAPI(stock) {
+      //individual stock ticker
       /**
        * TODO
        * Add validation. If stock API call fails, don't add it to the stock list
@@ -146,7 +106,6 @@ export default {
       // const apiKey = "71aea0f9ae7c2fcb0d5ddff108131d24"; // for email 1, rate limit reached for month of May
       const apiKey = "4001098532f1de7d5e26baff968871d7"; // for email 2
 
-      // If stock is not found in stocks object, add it.
       if (!(stock in this.stocks)) {
         this.stocks[stock] = {
           today: {},
@@ -159,7 +118,6 @@ export default {
         .get(`${endpoint}?access_key=${apiKey}&symbols=${stock}`)
         .then((response) => {
           let stockData = response.data.data;
-          // access our stock object in this.stocks so we can add data to it
           let stockInfo = this.stocks[stock];
 
           let latestTradingDay = stockData[0];
@@ -177,14 +135,7 @@ export default {
           stockInfo.today = latestTradingDay;
           stockInfo.lastThreeTradingDays = lastThreeTradingDays;
           stockInfo.lastWeekTradingDays = lastWeekTradingDays;
-
-          /**To avoid the problem of not being able to await this function in
-           * a lifecycle hook for some reason, I'll try to form the datasets here.
-           */
-          // MAKE SURE THIS EXECUTES LAST, AFTER ALL THE PREVIOUS ASYNC CODE.
-          // Note, since this is in the async api function, it'll get called however many stocks there are.
-          // For example, if there are 4 stocks in stockList, it'll get called 4 times. This might make duplicates.
-          this.createDatasets(this.stockList);
+          this.createDatasets(stock);
         })
         .catch((err) => {
           console.log(err);
