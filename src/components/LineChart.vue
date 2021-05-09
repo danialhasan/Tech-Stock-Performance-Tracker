@@ -11,15 +11,19 @@
 
 <script>
 import VueApexCharts from "vue3-apexcharts";
+
 export default {
   data() {
     return {
+      lastWeekTradingDays: [],
       chartOptions: {
         chart: {
           id: "vuechart-example",
         },
         xaxis: {
-          categories: [1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998],
+          // categories: [1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998],
+          categories: this.tradingDays,
+          //Must set these to the last 7 trading days relative to today
         },
       },
       // series: [
@@ -35,6 +39,7 @@ export default {
       series: this.graphData,
     };
   },
+  methods: {},
   components: {
     apexchart: VueApexCharts,
   },
@@ -49,6 +54,10 @@ export default {
     graphId: {
       type: String,
       default: "Graph Title Here",
+    },
+    tradingDays: {
+      type: Array,
+      default: () => [1, 2, 3, 4],
     },
   },
 };
