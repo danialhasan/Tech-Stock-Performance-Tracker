@@ -1,5 +1,4 @@
 <template>
-  <!-- TODO: Display passed down data from props.  -->
   <div class="mt-12 mb-36 flex items-start px-2">
     <div class="overflow-x-auto w-full">
       <table
@@ -20,7 +19,15 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
-          <tr v-for="stock in this.stocks" :key="stock">
+          <tr
+            v-for="stock in this.stocks"
+            :key="stock"
+            @click="$emit('stock-selected', stock.today.symbol)"
+          >
+            <!--
+          note: can't use double quotes for emit event name, only single quotes. This
+          only applies when you're using inline emits. 
+          -->
             <td class="pl-6 pr-12 py-4">
               <div class="flex items-center space-x-3">
                 <p class="text-xl">${{ stock.today.symbol }}</p>
@@ -90,6 +97,6 @@ export default {
     },
   },
   props: ["Stocks"],
-  emits: ["remove-stock"],
+  emits: ["remove-stock", "stock-selected"],
 };
 </script>

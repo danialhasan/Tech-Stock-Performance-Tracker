@@ -38,10 +38,11 @@ export default {
   methods: {
     searchStock(e) {
       e.preventDefault();
-      const input = document.getElementById("stock_input").value;
+      const input = document.getElementById("stock_input").value.toUpperCase();
+      document.getElementById("stock_input").value = "";
       this.$emit("stock_submission", input);
     },
   },
-  emits: [],
+  emits: ["stock_submission"],
 };
 </script>

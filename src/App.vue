@@ -1,14 +1,24 @@
 <template>
   <SearchBar @stock_submission="this.getInfoAPI" />
   <!-- <Graph /> -->
-  <StockList :Stocks="this.stocks" @remove-stock="removeStock" />
-  <line-chart :graphData="this.datasets" :tradingDays="this.tradingDays" />
-  <Navbar />
+  <StockList
+    :Stocks="this.stocks"
+    @remove-stock="removeStock"
+    @stock-selected="stockSelected"
+  />
+  <line-chart :graphData="this.graphDatasets" :tradingDays="this.tradingDays" />
+  <!-- I changed the graphData component from this.datasets to this.graphDatasets, because the value of the prop
+  will change depending on which stock is clicked. Since I don't want to mutate this.datasets, I changed it to a 
+  variable that can point to this.datasets or become its own thing. this.graphDatasets points to this.datasets
+  by default, which is its default configuration. When no stocks are selected, it will automatically point to that. 
+  In other cases, it will point to individual datasets within datasets. ~-->
+  <!-- <Navbar /> -->
+  <!-- hidden until we can use it -->
 </template>
 
 <script>
 import SearchBar from "./components/SearchBar";
-import Navbar from "./components/Navbar";
+// import Navbar from "./components/Navbar";
 import StockList from "./components/StockList";
 import LineChart from "./components/LineChart";
 import axios from "axios";
@@ -16,7 +26,7 @@ import intlFormat from "date-fns/intlFormat";
 
 export default {
   name: "App",
-  components: { SearchBar, Navbar, StockList, LineChart },
+  components: { SearchBar, /*Navbar,*/ StockList, LineChart },
   data() {
     return {
       stocks: {},
@@ -29,24 +39,41 @@ export default {
         },
       ],
       datasets: [],
+      graphDatasets: [],
       tradingDays: [],
     };
   },
   created() {
-    //lifecycle hooks are always synchronous, never async.
-    //Get some data to populate our data stores
-    // let stock = ["AAPL", "FB", "GNL", "TSLA"];
+    // get api info for all starter stocks
     let stock = this.stockList;
     stock.forEach((stockTicker, i) => {
       this.getInfoAPI(stockTicker);
     });
-    console.log(this.datasets);
+    // get last 7 trading days for graph
     this.getLastWeekTradingDays(new Date());
-    // this.getLastWeekTradingDays(new Date('Tue May 23 2021 02:43:53 GMT-0400 (Eastern Daylight Time)'));
-    // Change the date in the above line in new Date() to simulate
-    // different start dates.
+    //set graphDatasets to datasets as default
+    this.graphDatasets = this.datasets;
   },
   methods: {
+    stockSelected(stockName) {
+      this.graphDatasets = [];
+      console.log(stockName);
+      // We want to take the stockName and get it's dataset. Then we want to
+      // pass that individual dataset into the graph component through props.
+      // Just get the stockName dataset through Dataset. It's already there when
+      // createDatasets is called with all stocks.
+      console.log(this.datasets);
+      this.datasets.forEach((stock) => {
+        if (stock.name == stockName) {
+          let data = {
+            name: stockName,
+            data: stock.data,
+          };
+          this.graphDatasets.push(data);
+          console.log(this.graphDatasets);
+        }
+      });
+    },
     getLastWeekTradingDays(today) {
       /** NOTE
        * This function hasn't been extensively tested yet.
@@ -74,7 +101,6 @@ export default {
       }
     },
     createDatasets(stock) {
-      //individual stock ticker
       let graphData = {
         name: stock,
         data: [],
@@ -83,15 +109,7 @@ export default {
         graphData.data.push(this.stocks[stock].lastWeekTradingDays[day].close);
         //accessing the price data of the stock for each day of last week
       }
-      /**
-       *  I want to change the dataSets array to not be an array of arrays, but rather an array of
-       * objects. I want to emulate the structure of this.testData. So, I'll push
-       * an object instead of priceArray to this.datasets.
-       */
       this.datasets.push(graphData);
-      //Sometimes this.datasets is reverse in relation to this.stocks. It only happens sometimes
-      //I'm not sure if it's even happening in the first place, since vue devtools is not stable with
-      //Vue 3.
     },
     removeStock(symbol) {
       delete this.stocks[symbol];
@@ -109,7 +127,8 @@ export default {
       //individual stock ticker
       /**
        * TODO
-       * Add validation. If stock API call fails, don't add it to the stock list
+       * - Add validation. If stock API call fails, don't add it to the stock list
+       * - Add duplicate check. If stock is already in stockList, don't add.
        */
 
       const endpoint = "http://api.marketstack.com/v1/eod";
@@ -121,6 +140,9 @@ export default {
           lastThreeTradingDays: {},
           lastWeekTradingDays: {},
         };
+      } else {
+        console.log(`Duplicate: ${stock}`);
+        return;
       }
 
       axios

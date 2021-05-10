@@ -4,8 +4,14 @@
       width="500"
       type="line"
       :options="chartOptions"
-      :series="series"
+      :series="this.graphData"
     ></apexchart>
+    <!-- 
+      :series="series" doesn't update the graph when you select a stock. 
+      I don't know why because it should be linked to this.graphData which changes. 
+      To circumvent that, I sidestepped any usage of the series variable. It seems to work fine especially
+      since this.graphData includes all graphs/stocks by default.
+ -->
   </div>
 </template>
 
@@ -26,16 +32,7 @@ export default {
           //Must set these to the last 7 trading days relative to today
         },
       },
-      // series: [
-      //   {
-      //     name: "series-1",
-      //     data: [30, 40, 35, 50, 49, 60, 70, 91],
-      //   },
-      //   {
-      //     name: "series-2",
-      //     data: [60, 30, 15, 70, 39, 10, 0, 100],
-      //   }
-      // ],
+
       series: this.graphData,
     };
   },
@@ -44,9 +41,6 @@ export default {
     apexchart: VueApexCharts,
   },
   props: {
-    // graphOptions: {
-    //   type: Object,
-    // },
     graphData: {
       type: Array,
       default: () => [1, 2, 3, 4],
