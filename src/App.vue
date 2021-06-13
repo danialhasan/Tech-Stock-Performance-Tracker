@@ -132,7 +132,7 @@ export default {
        */
 
       const endpoint = "http://api.marketstack.com/v1/eod";
-      const apiKey = "ce8cc7f3923c691bfd0b1aa10aa5b594";
+      const apiKey = process.env.API_KEY;
 
       if (!(stock in this.stocks)) {
         this.stocks[stock] = {
